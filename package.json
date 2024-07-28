@@ -1,0 +1,238 @@
+{
+  "name": "snippet-craft",
+  "displayName": "Snippet Craft",
+  "description": "Managing and Creating Code Snippets Efficiently with Custom and Preset Variables",
+  "license": "MIT",
+  "version": "0.1.0",
+  "publisher": "linxiao-matoapp",
+  "icon": "logo.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jevonsflash/snippet-craft"
+  },
+  "extensionKind": [
+    "workspace",
+    "ui"
+  ],
+  "galleryBanner": {
+    "color": "#208dc6",
+    "theme": "dark"
+  },
+  "engines": {
+    "vscode": "^1.48.0"
+  },
+  "categories": [
+    "Snippets",
+    "Extension Packs",
+    "Other"
+  ],
+  "keywords": [
+    "Snippets",
+    "Snippet",
+    "Snipp"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "views": {
+      "snippsView": [
+        {
+          "id": "view.snippetCraft.snippsView",
+          "name": "Snippets列表"
+        },
+        {
+          "id": "view.snippetCraft.dictionaryView",
+          "name": "映射表"
+        }
+      ]
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "extension.snippetCraft.createSnipp",
+          "when": "editorHasSelection"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "extension.snippetCraft.createSnipp",
+          "when": "editorHasSelection",
+          "group": "snippet"
+        },
+        {
+          "command": "extension.snippetCraft.insertSnipps",
+          "group": "snippet",
+          "title": "插入Snippet"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "extension.snippetCraft.editTitle",
+          "group": "snippet",
+          "when": "view == view.snippetCraft.snippsView"
+        },
+        {
+          "command": "extension.snippetCraft.deleteEntry",
+          "group": "snippet",
+          "when": "view == view.snippetCraft.snippsView"
+        },
+        {
+          "command": "extension.snippetCraft.insertEntry",
+          "group": "snippet",
+          "when": "view == view.snippetCraft.snippsView"
+        },
+        {
+          "command": "extension.snippetCraft.editEntry",
+          "group": "snippet",
+          "when": "view == view.snippetCraft.snippsView"
+        },
+        {
+          "command": "extension.snippetCraft.editKv",
+          "when": "view == view.snippetCraft.dictionaryView",
+          "group": "kveditor"
+        },
+        {
+          "command": "extension.snippetCraft.deleteKv",
+          "when": "view == view.snippetCraft.dictionaryView",
+          "group": "kveditor"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "extension.snippetCraft.refreshEntry",
+          "group": "navigation",
+          "when": "view == view.snippetCraft.snippsView"
+        },
+        {
+          "command": "extension.snippetCraft.searchSnipps",
+          "group": "navigation",
+          "when": "view == view.snippetCraft.snippsView"
+        },
+        {
+          "command": "extension.snippetCraft.refreshKv",
+          "when": "view == view.snippetCraft.dictionaryView",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.snippetCraft.addKv",
+          "when": "view == view.snippetCraft.dictionaryView",
+          "group": "navigation"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "extension.snippetCraft.searchSnipps",
+        "group": "snippet",
+        "icon": "$(search)",
+        "title": "搜索"
+      },
+      {
+        "command": "extension.snippetCraft.insertSnipps",
+        "group": "snippet",
+        "title": "插入Snippet"
+      },
+      {
+        "command": "extension.snippetCraft.exportSnipps",
+        "group": "snippet",
+        "title": "导出"
+      },
+      {
+        "command": "extension.snippetCraft.deleteAllSnippets",
+        "group": "snippet",
+        "title": "删除全部Snippets"
+      },
+      {
+        "command": "extension.snippetCraft.importSnipps",
+        "group": "snippet",
+        "title": "导入"
+      },
+      {
+        "command": "extension.snippetCraft.createSnipp",
+        "title": "创建Snippet",
+        "group": "snippet"
+      },
+      {
+        "command": "extension.snippetCraft.refreshEntry",
+        "icon": "$(refresh)",
+        "title": "刷新"
+      },
+      {
+        "command": "extension.snippetCraft.addEntry",
+        "icon": "$(add)",
+        "title": "添加"
+      },
+      {
+        "command": "extension.snippetCraft.editEntry",
+        "icon": "$(edit)",
+        "title": "编辑"
+      },
+      {
+        "command": "extension.snippetCraft.editTitle",
+        "title": "编辑标题"
+      },
+      {
+        "command": "extension.snippetCraft.deleteEntry",
+        "title": "删除"
+      },
+      {
+        "command": "extension.snippetCraft.insertEntry",
+        "title": "插入"
+      },
+      {
+        "command": "extension.snippetCraft.addKv",
+        "icon": "$(add)",
+        "title": "添加映射"
+      },
+      {
+        "command": "extension.snippetCraft.refreshKv",
+        "icon": "$(refresh)",
+        "title": "刷新"
+      },
+      {
+        "command": "extension.snippetCraft.deleteKv",
+        "title": "删除"
+      },
+      {
+        "command": "extension.snippetCraft.editKv",
+        "title": "编辑"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "snippsView",
+          "title": "Snippets",
+          "icon": "./logo.svg"
+        }
+      ]
+    }
+  },
+  "homepage": "https://djinnapps.com/snippet",
+  "scripts": {
+    "vscode:prepublish": "yarn run compile",
+    "compile": "tsc -p ./",
+    "coverage": "nyc report --reporter=lcov",
+    "lint": "eslint src --ext ts",
+    "watch": "tsc -watch -p ./",
+    "pretest": "yarn run compile && yarn run lint",
+    "test": "nyc mocha 'out/test/**/*.test.js'"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.0.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^18.11.13",
+    "@types/vscode": "^1.42.0",
+    "@typescript-eslint/eslint-plugin": "^5.46.0",
+    "@typescript-eslint/parser": "^5.46.0",
+    "eslint": "^6.8.0",
+    "glob": "^8.0.3",
+    "mocha": "^10.2.0",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "nyc": "^15.1.0"
+  }
+}
