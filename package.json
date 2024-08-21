@@ -63,8 +63,7 @@
         },
         {
           "command": "extension.snippetCraft.insertSnipps",
-          "group": "snippet",
-          "title": "插入Snippet"
+          "group": "snippet"
         }
       ],
       "view/item/context": [
@@ -101,6 +100,11 @@
       ],
       "view/title": [
         {
+          "command": "extension.snippetCraft.addEntry",
+          "group": "navigation",
+          "when": "view == view.snippetCraft.snippsView"
+        },
+        {
           "command": "extension.snippetCraft.refreshEntry",
           "group": "navigation",
           "when": "view == view.snippetCraft.snippsView"
@@ -111,15 +115,16 @@
           "when": "view == view.snippetCraft.snippsView"
         },
         {
-          "command": "extension.snippetCraft.refreshKv",
+          "command": "extension.snippetCraft.addKv",
           "when": "view == view.snippetCraft.dictionaryView",
           "group": "navigation"
         },
         {
-          "command": "extension.snippetCraft.addKv",
+          "command": "extension.snippetCraft.refreshKv",
           "when": "view == view.snippetCraft.dictionaryView",
           "group": "navigation"
         }
+        
       ]
     },
     "commands": [
@@ -143,6 +148,16 @@
         "command": "extension.snippetCraft.deleteAllSnippets",
         "group": "snippet",
         "title": "删除全部Snippets"
+      },
+      {
+        "command": "extension.snippetCraft.deleteAllKVItems",
+        "group": "snippet",
+        "title": "删除全部映射"
+      },
+      {
+        "command": "extension.snippetCraft.initData",
+        "group": "snippet",
+        "title": "初始化数据"
       },
       {
         "command": "extension.snippetCraft.importSnipps",
@@ -204,7 +219,7 @@
       "activitybar": [
         {
           "id": "snippsView",
-          "title": "Snippets",
+          "title": "Snippet Craft",
           "icon": "./logo.svg"
         }
       ]

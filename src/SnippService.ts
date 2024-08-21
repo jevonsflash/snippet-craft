@@ -18,7 +18,8 @@ import path = require("path");
 
 export async function AddSnipp(context: ExtensionContext, state: Partial<ISnipp>) {
   const content = await getSnippText();
-  _addOrUpdateSnipp(context, state, content)
+  const trimmedName = content?.text?.trim().substring(0, 20) || '';
+  await _addOrUpdateSnipp(context, { ...state, name: trimmedName }, content)
 }
 export async function InsertSnipp(context: ExtensionContext, snipp: ISnipp) {
   const editor = window.activeTextEditor;
@@ -41,17 +42,21 @@ export async function InsertSnipp(context: ExtensionContext, snipp: ISnipp) {
   }
 }
 export async function AddSnippFromEditor(context: ExtensionContext, state: Partial<ISnipp>) {
-  const content = await showInputBoxWithMultiline(context, '请输入Snippet内容', '');
-  if (content) {
-    _addOrUpdateSnipp(context, state, { text: content, type: "TEXT" })
+  const name = await window.showInputBox({ prompt: '键入Snippet标题', value: state.name ?? '' });
+  if (name) {
+    const content = await showInputBoxWithMultiline(context, '请输入Snippet内容', `新建-${name}`, '');
+    if (content) {
+      await _addOrUpdateSnipp(context, { ...state, name }, { text: content, type: "TEXT" })
 
+    }
   }
+
 }
 
 export async function EditSnipp(context: ExtensionContext, state: Partial<ISnipp>, snippIndex: number) {
-  const content = await showInputBoxWithMultiline(context, '请输入Snippet内容', state.content ?? '');
+  const content = await showInputBoxWithMultiline(context, '请输入Snippet内容', `编辑-${state.name}`, state.content ?? '');
   if (content) {
-    _addOrUpdateSnipp(context, state, { text: content, type: state.contentType ?? "TEXT" }, snippIndex)
+    await _addOrUpdateSnipp(context, state, { text: content, type: state.contentType ?? "TEXT" }, snippIndex)
 
   }
 }
@@ -59,7 +64,7 @@ export async function EditSnipp(context: ExtensionContext, state: Partial<ISnipp
 export async function EditSnippTitle(context: ExtensionContext, state: Partial<ISnipp>, snippIndex: number) {
   const name = await window.showInputBox({ prompt: '键入Snippet标题', value: state.name ?? '' });
   if (name) {
-    _addOrUpdateSnipp(context, { ...state, name }, undefined, snippIndex)
+    await _addOrUpdateSnipp(context, { ...state, name }, undefined, snippIndex)
 
   }
 }
@@ -70,8 +75,6 @@ async function _addOrUpdateSnipp(context: ExtensionContext, state: Partial<ISnip
 }, snippIndex?: number) {
 
   if (content !== undefined) {
-    const trimmedName = content?.text?.trim().substring(0, 20) || '';
-    state.name = trimmedName;
     state.content = content?.text;
     state.contentType = content?.type;
   }
@@ -148,7 +151,7 @@ export async function SearchSnippForm(context: ExtensionContext) {
       snipp: sn
     })),
     {
-      placeHolder: "Search snipps",
+      placeHolder: "搜索Snippets",
       matchOnDescription: true,
       matchOnDetail: true
     }
@@ -160,10 +163,10 @@ export async function SearchSnippForm(context: ExtensionContext) {
 }
 
 
-async function showInputBoxWithMultiline(context: ExtensionContext, placeholder: string, initialValue: string): Promise<string | undefined> {
+async function showInputBoxWithMultiline(context: ExtensionContext, placeholder: string, title: string, initialValue: string): Promise<string | undefined> {
   const panel = window.createWebviewPanel(
     'multilineInput',
-    'Multiline Input',
+    title,
     ViewColumn.One,
     {
       enableScripts: true
@@ -242,8 +245,8 @@ export async function ReplacePlaceholders(text: string, context: ExtensionContex
     '${CLIPBOARD}': clipboard,
     '${WORKSPACE_NAME}': workspaceFolders ? workspaceFolders[0].name : '',
     '${WORKSPACE_FOLDER}': workspaceFolders ? workspaceFolders[0].uri.fsPath : '',
-    '${CURSOR_INDEX}': (editor?.selections.indexOf(editor.selection) ?? 0).toString(),
-    '${CURSOR_NUMBER}': ((editor?.selections.indexOf(editor.selection) ?? 0) + 1).toString(),
+    '${CURSOR_INDEX}': (editor?.selection.active.character ?? 0).toString(),
+    '${CURSOR_NUMBER}': ((editor?.selection.active.character ?? 0) + 1).toString(),
     '${CURRENT_YEAR}': currentDate.getFullYear().toString(),
     '${CURRENT_YEAR_SHORT}': currentDate.getFullYear().toString().slice(-2),
     '${CURRENT_MONTH}': (currentDate.getMonth() + 1).toString().padStart(2, '0'),

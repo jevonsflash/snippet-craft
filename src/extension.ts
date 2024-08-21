@@ -12,7 +12,7 @@ import {
   CompletionContext,
   CompletionItem,
 } from "vscode";
-import { AddSnipp, EditSnipp, InsertSnipp, SearchSnippForm,ReplacePlaceholders, EditSnippTitle } from "./SnippService";
+import { AddSnipp, EditSnipp, InsertSnipp, SearchSnippForm, ReplacePlaceholders, EditSnippTitle, AddSnippFromEditor } from "./SnippService";
 import { KVTreeDataProvider } from "./providers/KVTreeDataProvider";
 import { ISnipp, SnippItem } from "./models/SnippItem";
 import { KVItem } from './models/KVItem';
@@ -22,25 +22,21 @@ export function activate(context: ExtensionContext) {
 
 
   // 初始化时设置初始值
-  const initialSnippets:ISnipp[] =[ 
+  const initialSnippets: ISnipp[] = [
     {
-      name: "Variable Test Sample",
-      content: `Selected text: \${TM_SELECTED_TEXT}
-  Current line: \${TM_CURRENT_LINE}
-  Current word: \${TM_CURRENT_WORD}
-  Line index: \${TM_LINE_INDEX}
-  Line number: \${TM_LINE_NUMBER}
-  Filename: \${TM_FILENAME}
-  Filename base: \${TM_FILENAME_BASE}
-  Directory: \${TM_DIRECTORY}
-  Filepath: \${TM_FILEPATH}
-  Relative filepath: \${RELATIVE_FILEPATH}
-  Clipboard: \${CLIPBOARD}
-  Workspace name: \${WORKSPACE_NAME}
-  Workspace folder: \${WORKSPACE_FOLDER}
-  Cursor index: \${CURSOR_INDEX}
-  Cursor number: \${CURSOR_NUMBER}
-  Current year: \${CURRENT_YEAR}
+      name: "Customized Variable Sample",
+      content: `Value of 'AUTHOR' is: \${AUTHOR}
+  Value of 'COMPANY' is: \${COMPANY}
+  Value of 'MAIL' is: \${MAIL}
+  Value of 'FOOBAR' (non-exist) is: \${FOOBAR}
+`,
+      contentType: "TEXT",
+      lastUsed: new Date(),
+      created: new Date(),
+    },
+    {
+      name: "Time Variable Sample",
+      content: `Current year: \${CURRENT_YEAR}
   Current year (short): \${CURRENT_YEAR_SHORT}
   Current month: \${CURRENT_MONTH}
   Current month name: \${CURRENT_MONTH_NAME}
@@ -53,40 +49,93 @@ export function activate(context: ExtensionContext) {
   Current second: \${CURRENT_SECOND}
   Current seconds since Unix epoch: \${CURRENT_SECONDS_UNIX}
   Current timezone offset: \${CURRENT_TIMEZONE_OFFSET}
+`,
+      contentType: "TEXT",
+      lastUsed: new Date(),
+      created: new Date(),
+    },
+    {
+      name: "Editor Variable Sample",
+      content: `Selected text: \${TM_SELECTED_TEXT}
+  Current line: \${TM_CURRENT_LINE}
+  Current word: \${TM_CURRENT_WORD}
+  Line index: \${TM_LINE_INDEX}
+  Line number: \${TM_LINE_NUMBER}
+  Cursor index: \${CURSOR_INDEX}
+  Cursor number: \${CURSOR_NUMBER}
+`,
+      contentType: "TEXT",
+      lastUsed: new Date(),
+      created: new Date(),
+    },
+    {
+      name: "File Variable Sample",
+      content: `
+  Filename: \${TM_FILENAME}
+  Filename base: \${TM_FILENAME_BASE}
+  Directory: \${TM_DIRECTORY}
+  Filepath: \${TM_FILEPATH}
+  Relative filepath: \${RELATIVE_FILEPATH}
+  Workspace name: \${WORKSPACE_NAME}
+  Workspace folder: \${WORKSPACE_FOLDER}
+`,
+      contentType: "TEXT",
+      lastUsed: new Date(),
+      created: new Date(),
+    },
+    {
+      name: "Others Variable Sample",
+      content: `
+  Clipboard: \${CLIPBOARD}
   Random (Base-10): \${RANDOM}
   Random (Base-16): \${RANDOM_HEX}
   UUID: \${UUID}
 `,
       contentType: "TEXT",
-      lastUsed:new Date(),
+      lastUsed: new Date(),
       created: new Date(),
     },
     {
       name: "JavaScript Brief Code Comments Sample",
-      content: `// \${CURRENT_YEAR}-\${CURRENT_MONTH}-\${CURRENT_DATE} \${author}：修改`,
+      content: `// \${CURRENT_YEAR}-\${CURRENT_MONTH}-\${CURRENT_DATE} \${AUTHOR}：修改`,
       contentType: "javascript",
-      lastUsed:new Date(),
+      lastUsed: new Date(),
       created: new Date(),
     },
     {
       name: "JavaScript File Header Description Sample",
-      content: `<!--
- * @Author: \${author}
+      content: `/*
+ * @Author: \${AUTHOR}
  * @Date: \${CURRENT_YEAR}-\${CURRENT_MONTH}-\${CURRENT_DATE} \${CURRENT_HOUR}:\${CURRENT_MINUTE}:\${CURRENT_SECOND}
  * @LastEditTime: \${CURRENT_YEAR}-\${CURRENT_MONTH}-\${CURRENT_DATE} \${CURRENT_HOUR}:\${CURRENT_MINUTE}:\${CURRENT_SECOND}
- * @LastEditors: \${author}
+ * @LastEditors: \${AUTHOR}
  * @Description: 程序描述
  * @FileName: \${TM_FILENAME}
- * @Company:  \${company}
--->`,
-      contentType: "html",
-      lastUsed:new Date(),
+ * @Company:  \${COMPANY}
+*/`,
+      contentType: "javascript",
+      lastUsed: new Date(),
       created: new Date(),
     },
-    
+    {
+      name: "Html File Header Description Sample",
+      content: `<!--
+ * @Author: \${AUTHOR}
+ * @Date: \${CURRENT_YEAR}-\${CURRENT_MONTH}-\${CURRENT_DATE} \${CURRENT_HOUR}:\${CURRENT_MINUTE}:\${CURRENT_SECOND}
+ * @LastEditTime: \${CURRENT_YEAR}-\${CURRENT_MONTH}-\${CURRENT_DATE} \${CURRENT_HOUR}:\${CURRENT_MINUTE}:\${CURRENT_SECOND}
+ * @LastEditors: \${AUTHOR}
+ * @Description: 程序描述
+ * @FileName: \${TM_FILENAME}
+ * @Company:  \${COMPANY}
+-->`,
+      contentType: "html",
+      lastUsed: new Date(),
+      created: new Date(),
+    },
+
   ];
   const snippetsObject = context.globalState.get<{ [key: string]: any }>('snipps');
-  if (!snippetsObject||snippetsObject.length===0) {
+  if (!snippetsObject) {
     context.globalState.update("snipps", initialSnippets);
   }
 
@@ -103,7 +152,12 @@ export function activate(context: ExtensionContext) {
     snippDataProvider.refresh();
   });
 
-  commands.registerCommand("extension.snippetCraft.addEntry", () => {
+  commands.registerCommand("extension.snippetCraft.addEntry", async () => {
+
+
+
+    await AddSnippFromEditor(context, { created: new Date() });
+
   });
 
   commands.registerCommand(
@@ -163,7 +217,7 @@ export function activate(context: ExtensionContext) {
 
   });
 
-  commands.registerCommand("extension.snippetCraft.editTitle", (snipp: ISnipp) => {
+  commands.registerCommand("extension.snippetCraft.editTitle", async (snipp: ISnipp) => {
     if (!snipp.content) {
       window.showErrorMessage(`无法编辑分组`);
       return;
@@ -175,30 +229,14 @@ export function activate(context: ExtensionContext) {
     );
 
 
-    EditSnippTitle(context, { ...snipp, created: new Date() }, snipIndex);
-
-
-    const updatedSnipps = existingSnipps.map(
-      (exsnip: ISnipp, index) => {
-        if (index === snipIndex) {
-          return snipp;
-        } else {
-          return exsnip;
-        }
-      }
-    );
-    context.globalState.update("snipps", updatedSnipps);
-
-    snippDataProvider.refresh();
-
-    window.showInformationMessage(`已更新Snippet`);
+    await EditSnippTitle(context, { ...snipp, created: new Date() }, snipIndex);
 
   });
 
 
   const snipps = context?.globalState?.get("snipps", []);
   const contentTypes = snipps.map((snipp: ISnipp) => snipp.contentType);
-  const extensionContext=context;
+  const extensionContext = context;
   const providers = contentTypes
     .filter((value, index, self) => self.indexOf(value) === index)
     .map(type =>
@@ -211,17 +249,17 @@ export function activate(context: ExtensionContext) {
         ) {
           return new Promise<CompletionItem[]>((resolve, reject) => {
 
-          var result= snipps
-            .filter((snipp: ISnipp) => {
-              return snipp.contentType === type;
-            })
-            .map(async (snipp: ISnipp) => {
-              const replacedContentText = await ReplacePlaceholders(snipp.content, extensionContext);
+            var result = snipps
+              .filter((snipp: ISnipp) => {
+                return snipp.contentType === type;
+              })
+              .map(async (snipp: ISnipp) => {
+                const replacedContentText = await ReplacePlaceholders(snipp.content, extensionContext);
 
-              const commandCompletion = new CompletionItem(snipp.name);
-              commandCompletion.insertText = replacedContentText || '';
-              return commandCompletion;
-            });
+                const commandCompletion = new CompletionItem(snipp.name);
+                commandCompletion.insertText = replacedContentText || '';
+                return commandCompletion;
+              });
 
             Promise.all(result).then(resolve);
           });
@@ -240,7 +278,7 @@ export function activate(context: ExtensionContext) {
 
   context.subscriptions.push(
     commands.registerCommand("extension.snippetCraft.searchSnipps", async () => {
-      SearchSnippForm(context);
+      await SearchSnippForm(context);
     })
   );
 
@@ -287,6 +325,45 @@ export function activate(context: ExtensionContext) {
   );
 
   context.subscriptions.push(
+    commands.registerCommand("extension.snippetCraft.deleteAllKVItems", async () => {
+      window
+        .showInformationMessage(
+          "确定删除全部的映射项吗？",
+          "是",
+          "取消"
+        )
+        .then((answer) => {
+          if (answer === "是") {
+            // Run function
+            context.globalState.update("key-value", []);
+            commands.executeCommand("extension.snippetCraft.refreshKv");
+            window.showInformationMessage(`已清空所有的映射项`);
+          }
+        });
+    })
+  );
+
+  context.subscriptions.push(
+    commands.registerCommand("extension.snippetCraft.initData", async () => {
+      window
+        .showInformationMessage(
+          "确定初始化数据吗？这将删除所有现有的snippets 和 映射项",
+          "是",
+          "取消"
+        )
+        .then((answer) => {
+          if (answer === "是") {
+            context.globalState.update("snipps", initialSnippets);
+            context.globalState.update('key-value', initialKV);
+            commands.executeCommand("extension.snippetCraft.refreshEntry");
+            commands.executeCommand("extension.snippetCraft.refreshKv");
+            window.showInformationMessage(`已初始化数据`);
+          }
+        });
+    })
+  );
+
+  context.subscriptions.push(
     commands.registerCommand("extension.snippetCraft.importSnipps", async () => {
       const options: OpenDialogOptions = {
         canSelectMany: false,
@@ -307,24 +384,24 @@ export function activate(context: ExtensionContext) {
 
                 if (!snipp.content) {
                   valid = false;
-                  console.log("no content");
+                  console.log("无内容");
                 }
 
                 if (!snipp.created) {
                   valid = false;
-                  console.log("no ccreated");
+                  console.log("无创建时间");
                 }
-                
+
 
                 if (!snipp.contentType) {
                   valid = false;
-                  console.log("no tags");
+                  console.log("无类型");
                 }
 
                 if (valid) {
                   validSnippets.push(snipp);
                 } else {
-                  throw new Error("Snippet is invalid");
+                  throw new Error("无效的snippet");
                 }
               });
 
@@ -348,9 +425,9 @@ export function activate(context: ExtensionContext) {
 
   // 初始化时设置初始值
   const initialKV = {
-    "author": "林晓lx",
-    "company": "my-company",
-    "email": "jevonsflash@qq.com"
+    "AUTHOR": "my-name",
+    "COMPANY": "my-company",
+    "MAIL": "my-name@email.com"
   };
   const kvObject = context.globalState.get<{ [key: string]: string }>('key-value');
   if (!kvObject) {
